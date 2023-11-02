@@ -291,12 +291,13 @@ def exp(a):
 class ReLU(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.maximum(a, 0) # Multiply arguments element-wise
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        a = node.inputs[0].realize_cached_data()
+        return out_grad * Tensor(a > 0)
         ### END YOUR SOLUTION
 
 

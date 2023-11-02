@@ -247,7 +247,12 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.size != prod(new_shape):
+            raise ValueError(f'Prod of the new shape {prod(new_shape)} is not equal to the prod of the current shape {prod(self.shape)}')
+        if not self.is_compact():
+            raise ValueError('Matrix is not compact')
+        new_strides = NDArray.compact_strides(new_shape)
+        return NDArray.make(new_shape, strides=new_strides, device=self.device, handle=self._handle, offset=self._offset)
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -272,7 +277,10 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        assert len(new_axes) == len(self.shape)
+        new_shape = tuple([self.shape[i] for i in new_axes])
+        new_strides = tuple([self.strides[i] for i in new_axes])
+        return self.as_strided(new_shape, new_strides)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -296,7 +304,15 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_strides = [0] * len(new_shape)
+        for i in range(1, len(self.shape) + 1):
+            if self.shape[-i] != 1:
+                assert new_shape[-i] == self.shape[-i]
+                
+            if new_shape[-i] == self.shape[-i]:
+                new_strides[-i] = self.strides[-i]
+        
+        return self.as_strided(new_shape, tuple(new_strides))
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -363,7 +379,15 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        # idx 现在就是各个维度需要拿的 范围
+        new_offset = 0
+        new_shape = list(self.shape)
+        new_strides = list(self.strides)
+        for i, sli in enumerate(idxs):
+            new_offset += self.strides[i]*sli.start
+            new_shape[i] = math.ceil((sli.stop - sli.start)/sli.step) #?
+            new_strides[i] = self.strides[i]*sli.step
+        return NDArray.make(tuple(new_shape), tuple(new_strides), self.device, self._handle, new_offset)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):
