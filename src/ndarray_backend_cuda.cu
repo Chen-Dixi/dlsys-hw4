@@ -312,6 +312,15 @@ void ScalarDiv(const CudaArray& a, scalar_t val, CudaArray* out) {
   ScalarDivKernel SCALAR_BINARY_KERNEL_INVOKE;
 }
 
+__global__ void EwisePowerKernel(const scalar_t* a, const scalar_t* b, scalar_t* out, size_t size) {
+  KERNEL_LEFT = pow(a[gid], b[gid]);
+}
+
+void EwisePower(const CudaArray& a, const CudaArray& b, CudaArray* out) {
+  DIM_INIT;
+  EwisePowerKernel EWISE_BINARY_KERNEL_INVOKE;
+}
+
 __global__ void ScalarPowerKernel(const scalar_t* a, scalar_t val, scalar_t* out, size_t size) {
   KERNEL_LEFT = pow(a[gid], val);
 }
@@ -792,6 +801,7 @@ PYBIND11_MODULE(ndarray_backend_cuda, m) {
   m.def("scalar_mul", ScalarMul);
   m.def("ewise_div", EwiseDiv);
   m.def("scalar_div", ScalarDiv);
+  m.def("ewise_power", EwisePower);
   m.def("scalar_power", ScalarPower);
 
   m.def("ewise_maximum", EwiseMaximum);

@@ -43,8 +43,8 @@ void Fill(AlignedArray* out, scalar_t val) {
   }
 }
 
-uint32_t GetAndIncrementIndex(std::vector<uint32_t> &indices, const std::vector<uint32_t>& shape,
-             const std::vector<uint32_t>& strides, int n_dim) {
+uint32_t GetAndIncrementIndex(std::vector<uint32_t> &indices, const std::vector<int32_t>& shape,
+             const std::vector<int32_t>& strides, int n_dim) {
   uint32_t idx = 0;
   for(int k = 0; k < n_dim; k++) {
       idx += strides[k] * indices[k];
@@ -226,6 +226,10 @@ void ScalarDiv(const AlignedArray& a, scalar_t val, AlignedArray* out) {
 
 scalar_t pow(const scalar_t& a, const scalar_t& b) {
   return std::pow<scalar_t>(a, b);
+}
+
+void EwisePower(const AlignedArray& a, const AlignedArray& b, AlignedArray* out) {
+  EwiseOp(a, b, out, pow);
 }
 
 void ScalarPower(const AlignedArray& a, scalar_t val, AlignedArray* out) {
@@ -516,6 +520,7 @@ PYBIND11_MODULE(ndarray_backend_cpu, m) {
   m.def("scalar_mul", ScalarMul);
   m.def("ewise_div", EwiseDiv);
   m.def("scalar_div", ScalarDiv);
+  m.def("ewise_power", EwisePower);
   m.def("scalar_power", ScalarPower);
 
   m.def("ewise_maximum", EwiseMaximum);
