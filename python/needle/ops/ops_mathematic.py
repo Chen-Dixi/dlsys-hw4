@@ -364,7 +364,7 @@ class Tanh(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return (1 - tanh(node.inputs[0])**2) * out_grad
+        return -(tanh(node.inputs[0])**2 - 1) * out_grad
         ### END YOUR SOLUTION
 
 

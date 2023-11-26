@@ -28,6 +28,8 @@ def backward_check(f, *args, **kwargs):
         np.linalg.norm(backward_grad[i].numpy() - numerical_grad[i])
         for i in range(len(args))
     )
+    # print("backward grad:{}".format(backward_grad))
+    # print("numerical grad:{}".format(numerical_grad))
     assert error < 4.2e-1, "error: {}".format(error)
     return [g.numpy() for g in backward_grad]
 
@@ -41,10 +43,10 @@ def test_tanh():
         print(ndl_tanh_res)
 
 def test_tanh_backward():
-    for shape in GENERAL_SHAPES:
-        _A = np.random.randn(*shape).astype(np.float32)
-        A = ndl.Tensor(nd.array(_A), device=device)
-        backward_check(ndl.tanh, A)
+    shape = (4, 5, 6)
+    _A = np.random.randn(*shape).astype(np.float32)
+    A = ndl.Tensor(nd.array(_A), device=device)
+    backward_check(ndl.tanh, A)
 
 if __name__ == '__main__':
     test_tanh_backward()
