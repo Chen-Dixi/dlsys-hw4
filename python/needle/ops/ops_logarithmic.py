@@ -30,7 +30,7 @@ class LogSumExp(TensorOp):
     def compute(self, Z):
         ### BEGIN YOUR SOLUTION
         maxZ = Z.max(axis=self.axes, keepdims=True)
-        expSum = array_api.sum(array_api.exp(Z - maxZ), axis=self.axes)
+        expSum = array_api.sum(array_api.exp(Z - maxZ.broadcast_to(Z.shape)), axis=self.axes) # if axes = 2, (a,b,c) -> (a,b) reduce了维度
         return array_api.log(expSum) + Z.max(axis=self.axes, keepdims=False)
         ### END YOUR SOLUTION
 

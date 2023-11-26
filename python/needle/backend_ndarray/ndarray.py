@@ -250,9 +250,10 @@ class NDArray:
         if self.size != prod(new_shape):
             raise ValueError(f'Prod of the new shape {prod(new_shape)} is not equal to the prod of the current shape {prod(self.shape)}')
         if not self.is_compact():
-            raise ValueError('Matrix is not compact')
+            return self.compact().as_strided(new_shape, NDArray.compact_strides(new_shape))
         new_strides = NDArray.compact_strides(new_shape)
         return NDArray.make(new_shape, strides=new_strides, device=self.device, handle=self._handle, offset=self._offset)
+        
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -420,8 +421,9 @@ class NDArray:
         depending on whether "other" is an NDArray or scalar
         """
         out = NDArray.make(self.shape, device=self.device)
+        self_shape = self.shape
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays"
+            assert self.shape == other.shape, "operation needs two equal-sized arrays, {}, {}".format(self_shape, other.shape)
             ewise_func(self.compact()._handle, other.compact()._handle, out._handle)
         else:
             scalar_func(self.compact()._handle, other, out._handle)
@@ -652,6 +654,8 @@ def tanh(a):
 def sum(a, axis=None, keepdims=False):
     return a.sum(axis=axis, keepdims=keepdims)
 
+def transpose(a, axie=None):
+    return a.permute(axie)
 
 def flip(a, axes):
     return a.flip(axes)
