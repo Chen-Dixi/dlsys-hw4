@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./python')
+import itertools
 import numpy as np
 import needle as ndl
 from needle import backend_ndarray as nd
@@ -48,5 +49,33 @@ def test_tanh_backward():
     A = ndl.Tensor(nd.array(_A), device=device)
     backward_check(ndl.tanh, A)
 
+def cifar10_dataset():
+    train = False
+    dataset = ndl.data.CIFAR10Dataset("data/cifar-10-batches-py", train=train)
+    if train:
+        assert len(dataset) == 50000
+    else:
+        assert len(dataset) == 10000
+    example = dataset[np.random.randint(len(dataset))]
+    assert(isinstance(example, tuple))
+    X, y = example
+    assert isinstance(X, np.ndarray)
+    assert X.shape == (3, 32, 32)
+
+def cifar10_dataloader():
+    train = False
+    batch_size = 2
+    cifar10_test_dataset = ndl.data.CIFAR10Dataset("data/cifar-10-batches-py", train=train)
+    train_loader = ndl.data.DataLoader(cifar10_test_dataset, batch_size)
+    for (X, y) in train_loader:
+        break
+    assert isinstance(X.cached_data, nd.NDArray)
+    assert isinstance(X, ndl.Tensor)
+    assert isinstance(y, ndl.Tensor)
+    assert X.dtype == 'float32'
+    
+
 if __name__ == '__main__':
-    test_tanh_backward()
+    # test_tanh_backward()
+    cifar10_dataset()
+    cifar10_dataloader()

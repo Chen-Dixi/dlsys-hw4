@@ -1,9 +1,8 @@
-import operator
 import math
+import operator
 from functools import reduce
+
 import numpy as np
-from . import ndarray_backend_numpy
-from . import ndarray_backend_cpu
 
 
 # math.prod not in Python 3.7
@@ -68,11 +67,13 @@ def cuda():
 
 def cpu_numpy():
     """Return numpy device"""
+    from . import ndarray_backend_numpy
     return BackendDevice("cpu_numpy", ndarray_backend_numpy)
 
 
 def cpu():
     """Return cpu device"""
+    from . import ndarray_backend_cpu
     return BackendDevice("cpu", ndarray_backend_cpu)
 
 
