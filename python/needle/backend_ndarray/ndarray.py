@@ -608,7 +608,17 @@ class NDArray:
         axes = ( (0, 0), (1, 1), (0, 0)) pads the middle axis with a 0 on the left and right side.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = [0] * self.ndim
+        # 新创建一个 ndarray，再 set 进去
+        for i, (l, r) in enumerate(axes):
+            new_shape[i] = self.shape[i] + l + r
+        other = NDArray.make(new_shape, device=self.device)
+        other.fill(0)
+        # 准备idx slice tuple内容
+        sli = [slice(l, self.shape[i] + l) for i, (l, r) in enumerate(axes)]
+
+        other[tuple(sli)] = self
+        return other
         ### END YOUR SOLUTION
 
 def array(a, dtype="float32", device=None):
