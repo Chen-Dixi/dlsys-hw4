@@ -43,9 +43,9 @@ void Fill(AlignedArray* out, scalar_t val) {
   }
 }
 
-uint32_t GetAndIncrementIndex(std::vector<uint32_t> &indices, const std::vector<int32_t>& shape,
+int32_t GetAndIncrementIndex(std::vector<int32_t> &indices, const std::vector<int32_t>& shape,
              const std::vector<int32_t>& strides, int n_dim) {
-  uint32_t idx = 0;
+  int32_t idx = 0;
   for(int k = 0; k < n_dim; k++) {
       idx += strides[k] * indices[k];
   }
@@ -81,12 +81,12 @@ void Compact(const AlignedArray& a, AlignedArray* out, std::vector<int32_t> shap
    */
   /// BEGIN SOLUTION
   size_t n_dim = shape.size();
-  std::vector<uint32_t> indices(n_dim, 0);
+  std::vector<int32_t> indices(n_dim, 0);
   
   for(size_t i = 0; i < out->size; i++) {
     // 计算出 要赋值的元素在a中的下标位置
     // 遍历 维护的indices 列表
-    uint32_t idx = GetAndIncrementIndex(indices, shape, strides, n_dim);
+    int32_t idx = GetAndIncrementIndex(indices, shape, strides, n_dim);
     out->ptr[i] = a.ptr[offset + idx]; 
   }
   /// END SOLUTION
@@ -106,12 +106,12 @@ void EwiseSetitem(const AlignedArray& a, AlignedArray* out, std::vector<int32_t>
    */
   /// BEGIN SOLUTION
   size_t n_dim = shape.size();
-  std::vector<uint32_t> indices(n_dim, 0);
+  std::vector<int32_t> indices(n_dim, 0);
 
   // 已经提前在python 层做了size的断言 assert prod(view.shape) == prod(other.shape)
   for(int i = 0; i < a.size; i++) {
     // 计算出 要赋值的元素在a中的下标位置
-    uint32_t idx = GetAndIncrementIndex(indices, shape, strides, n_dim);
+    int32_t idx = GetAndIncrementIndex(indices, shape, strides, n_dim);
     out->ptr[offset + idx] = a.ptr[i];
   }
   /// END SOLUTION
@@ -135,9 +135,9 @@ void ScalarSetitem(const size_t size, scalar_t val, AlignedArray* out, std::vect
 
   /// BEGIN SOLUTION
   size_t n_dim = shape.size();
-  std::vector<uint32_t> indices(n_dim, 0);
+  std::vector<int32_t> indices(n_dim, 0);
   for(size_t i = 0; i < size; i++) {
-    uint32_t idx = GetAndIncrementIndex(indices, shape, strides, n_dim);
+    int32_t idx = GetAndIncrementIndex(indices, shape, strides, n_dim);
     out->ptr[offset + idx] = val;
   }
   /// END SOLUTION
