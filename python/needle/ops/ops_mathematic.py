@@ -505,13 +505,11 @@ class UnDilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        shape = a.shape
-        slices = [slice(0, shape[idx]) for idx in range(len(shape))]
-        for ax in self.axes:
-            if ax >= len(shape):
-                continue
-            slices[ax] = slice(0, shape[ax], 1 + self.dilation)
-        return a[tuple(slices)].compact()
+        shape = list(a.shape)
+        sli = [slice(0, shape[i], self.dilation + 1) if i in self.axes else slice(0, shape[i])
+            for i in range(len(shape))]
+
+        return a[tuple(sli)].compact()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -526,6 +524,7 @@ def undilate(a, axes, dilation):
 
 
 class Conv(TensorOp):
+    """ convolution op should accept tensors in the NHWC format """
     def __init__(self, stride: Optional[int] = 1, padding: Optional[int] = 0):
         self.stride = stride
         self.padding = padding
