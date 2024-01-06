@@ -472,12 +472,25 @@ class Dilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = list(a.shape)
+
+        for i, axe in enumerate(self.axes):
+            # axe: 当前维度
+            new_shape[axe] = new_shape[axe] * (1 + self.dilation)
+        
+        other = NDArray.make(new_shape, device=a.device)
+        other.fill(0)
+        sli = [slice(0, new_shape[i], self.dilation + 1) if i in self.axes else slice(0, new_shape[i])
+            for i in range(a.ndim)]
+
+        other[tuple(sli)] = a
+        return other
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        out_grad = undilate(out_grad, self.axes, self.dilation)
+        return (out_grad,)
         ### END YOUR SOLUTION
 
 
@@ -492,12 +505,19 @@ class UnDilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        shape = a.shape
+        slices = [slice(0, shape[idx]) for idx in range(len(shape))]
+        for ax in self.axes:
+            if ax >= len(shape):
+                continue
+            slices[ax] = slice(0, shape[ax], 1 + self.dilation)
+        return a[tuple(slices)].compact()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        out_grad = dilate(out_grad, self.axes, self.dilation)
+        return (out_grad,)
         ### END YOUR SOLUTION
 
 

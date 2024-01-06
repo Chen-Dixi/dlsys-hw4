@@ -629,6 +629,20 @@ class NDArray:
         return other
         ### END YOUR SOLUTION
 
+    def dilate(self, axes: tuple, dilation: int):
+        new_shape = list(self.shape)
+
+        for i, axe in enumerate(axes):
+            # axe: 当前维度
+            new_shape[axe] = new_shape[axe] * (1 + dilation)
+        
+        other = NDArray.make(new_shape, device=self.device)
+        other.fill(0)
+        sli = [slice(0, new_shape[i], dilation + 1) if i in axes else slice(0, self.shape[i])
+            for i in range(self.ndim)]
+        other[tuple(sli)] = self
+        return other
+
 def array(a, dtype="float32", device=None):
     """Convenience methods to match numpy a bit more closely."""
     dtype = "float32" if dtype is None else dtype
