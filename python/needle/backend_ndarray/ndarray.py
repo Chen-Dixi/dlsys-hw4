@@ -248,8 +248,16 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        if self.size != prod(new_shape):
-            raise ValueError(f'Prod of the new shape {prod(new_shape)} is not equal to the prod of the current shape {prod(self.shape)}')
+        if prod(self.shape) != prod(new_shape):
+            if -1 in new_shape and new_shape.count(-1) == 1:
+                # 支持 reshape(-1, dim_1) 操作
+                val = int(prod(self.shape) / prod(new_shape) * -1)
+                tmp_shape = []
+                for dim in new_shape:
+                    tmp_shape.append(dim if dim != -1 else val)
+                new_shape = tuple(tmp_shape)
+            else:
+                raise ValueError(f'Prod of the new shape {prod(new_shape)} is not equal to the prod of the current shape {prod(self.shape)}')
         if not self.is_compact():
             return self.compact().as_strided(new_shape, NDArray.compact_strides(new_shape))
         new_strides = NDArray.compact_strides(new_shape)

@@ -526,12 +526,37 @@ def undilate(a, axes, dilation):
 class Conv(TensorOp):
     """ convolution op should accept tensors in the NHWC format """
     def __init__(self, stride: Optional[int] = 1, padding: Optional[int] = 0):
+        ### padding: a single int – in which case the same value is used for the height and width dimension
         self.stride = stride
         self.padding = padding
 
     def compute(self, A, B):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        N, H, W, C_in = A.shape
+        K, _, _, C_out = B.shape
+
+        _A = A.pad((
+            (0,0), 
+            (self.padding, self.padding), 
+            (self.padding, self.padding), 
+            (0, 0))
+         ) if self.padding > 0 else A
+
+        
+        Ns, Hs, Ws, Cs = _A.strides
+
+        H_out = (H - K + 2 * self.padding) // self.stride + 1
+        W_out = (W - K + 2 * self.padding) // self.stride + 1
+
+        inner_dim = K * K * C_in
+
+        _A = _A.as_strided(
+            shape=(N, H_out, W_out, K, K, C_in),
+            strides = (Ns, Hs*self.stride, Ws*self.stride, Hs, Ws, Cs)
+            ).reshape((-1, inner_dim))
+        
+        out = _A @ (B.reshape((-1, C_out)))
+        return out.reshape((N, H_out, W_out, C_out))
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
