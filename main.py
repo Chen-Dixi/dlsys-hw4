@@ -77,5 +77,15 @@ def cifar10_dataloader():
 
 if __name__ == '__main__':
     # test_tanh_backward()
-    cifar10_dataset()
-    cifar10_dataloader()
+    # cifar10_dataset()
+    # cifar10_dataloader()
+    out_channels = 3,
+    in_channels = 2,
+    bias_bound = 1
+    dtype="float"
+    a = ndl.init.rand(
+                    *(out_channels,),
+                    low=-bias_bound, high=bias_bound,
+                    dtype=dtype,
+                    device=device,
+                    requires_grad=True)

@@ -6,7 +6,7 @@ from needle import ops
 import needle.init as init
 import numpy as np
 from .nn_basic import Parameter, Module
-
+from torch.nn import Conv2d
 
 class Conv(Module):
     """
@@ -26,12 +26,47 @@ class Conv(Module):
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.stride = stride
-
+        
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.padding = kernel_size // 2
+        kernel_sqaure = kernel_size ** 2
+        self.weight = Parameter(
+                init.kaiming_uniform(
+                    fan_in=in_channels*kernel_sqaure, fan_out=out_channels*kernel_sqaure, 
+                    shape=(kernel_size, kernel_size, in_channels, out_channels), 
+                    dtype=dtype,
+                    device=device,
+                    requires_grad=True
+                )
+            )
+        self.bias = None
+        if bias:
+            bias_bound = 1 / ((in_channels * kernel_sqaure) ** 0.5)
+            self.bias = Parameter(
+                init.rand(
+                    out_channels,
+                    low=-bias_bound, high=bias_bound,
+                    dtype=dtype,
+                    device=device,
+                    requires_grad=True)
+            )
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        # x in NCHW format, outputs also in NCHW format
+        
+        # NCHW -> NHWC
+        x = ops.transpose(
+            ops.transpose(x, (1, 2)),
+            (2,3)
+        )
+        x = ops.conv(x, self.weight, stride=self.stride, padding=self.padding)
+        if self.bias is not None:
+            x = x + ops.broadcast_to(self.bias, x.shape)
+
+        x = ops.transpose(
+            ops.transpose(x, (1,3))
+        ) # NHWC -> NCWH -> NCHW
+        return x
         ### END YOUR SOLUTION

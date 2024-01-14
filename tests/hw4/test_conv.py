@@ -339,7 +339,8 @@ conv_forward_params = [
     (32, 8, 16, 3, 2),
     (32, 8, 8, 3, 2),
     (32, 16, 8, 3, 1),
-    (32, 16, 8, 3, 2)
+    (32, 16, 8, 3, 2),
+    (4, 8, 16, 2, 1),
 ]
 @pytest.mark.parametrize("s,cin,cout,k,stride", conv_forward_params)
 @pytest.mark.parametrize("device", _DEVICES)
