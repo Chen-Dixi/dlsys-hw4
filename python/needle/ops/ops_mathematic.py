@@ -242,7 +242,20 @@ class Summation(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.sum(a, self.axes)
+        if not isinstance(self.axes, (tuple, list)):
+            return a.sum(self.axes)
+        if len(self.axes) > 1:
+            axes = list(self.axes)[::-1]
+            increments = 0
+            while len(axes) > 0:
+                a = a.sum(axes[-1] - increments)
+                axes.pop()
+                increments += 1
+            return a
+        elif len(self.axes) < 1:
+            return a.sum()
+        else:
+            return a.sum(self.axes)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -561,7 +574,39 @@ class Conv(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        X, W = node.inputs[0], node.inputs[1]
+
+        out_shape = node.shape
+        H_out, W_out = out_shape[1], out_shape[2]
+        H_in, W_in = X.shape[1], X.shape[2]
+        _, _, _, C_in = X.shape
+        K, _, _, C_out = W.shape
+        
+
+        # 首先计算输入矩阵X的梯度
+        W_transpose = transpose(flip(W,(0, 1)), (2, 3)) # (K, K, c_out, c_in)
+        # 反向传播处理 stride 和 padding
+        
+        out_grad_dilate = dilate(out_grad, axes=(1, 2), dilation=self.stride - 1)
+        X_grad = conv(
+            out_grad_dilate,
+            W_transpose,
+            stride=1,
+            padding=K - 1 - self.padding)
+
+
+
+        out_grad_dilate = transpose(transpose(out_grad_dilate, (0, 2)), (0, 1)) # (H_out, W_out, N, c_out)
+        X_transpose = transpose(X, (0, 3)) # CHWN
+        W_grad = conv(
+            X_transpose,
+            out_grad_dilate,
+            1,
+            self.padding
+        )
+        W_grad = W_grad.transpose((0, 2)).transpose((0, 1))
+
+        return (X_grad, W_grad)
         ### END YOUR SOLUTION
 
 

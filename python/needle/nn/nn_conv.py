@@ -66,7 +66,8 @@ class Conv(Module):
             x = x + ops.broadcast_to(self.bias, x.shape)
 
         x = ops.transpose(
-            ops.transpose(x, (1,3))
+            ops.transpose(x, (1,3)),
+            (2,3)
         ) # NHWC -> NCWH -> NCHW
         return x
         ### END YOUR SOLUTION

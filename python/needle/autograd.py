@@ -285,6 +285,9 @@ class Tensor(Value):
         if array_api is numpy:
             return cpu()
         return data.device
+    @property
+    def ndim(self):
+        return self.realize_cached_data().ndim
 
     def backward(self, out_grad=None):
         out_grad = (
