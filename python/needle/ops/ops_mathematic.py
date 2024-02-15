@@ -486,6 +486,8 @@ class Dilate(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
         new_shape = list(a.shape)
+        if self.dilation == 0:
+            return a
 
         for i, axe in enumerate(self.axes):
             # axe: 当前维度
@@ -573,40 +575,38 @@ class Conv(TensorOp):
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
+        # A is the input to the forward pass
+        # W is the convolution kernel
+        A, W = node.inputs[0], node.inputs[1]
         ### BEGIN YOUR SOLUTION
-        X, W = node.inputs[0], node.inputs[1]
-
-        out_shape = node.shape
-        H_out, W_out = out_shape[1], out_shape[2]
-        H_in, W_in = X.shape[1], X.shape[2]
-        _, _, _, C_in = X.shape
-        K, _, _, C_out = W.shape
+        # out_grad.shape: (N, H_out, W_out, C_out)
+        out_shape = out_grad.shape
+        N, H_out, W_out, C_out = out_shape
+        K, _, C_in, _ = W.shape
         
+        # 首先计算输入矩阵的梯度 A.grad
+        W_tranpose = transpose(flip(W, (0, 1)), (2, 3)) # K, K, C_out, C_in
+         
+        # 处理前向过程中的stride 和 padding
+        _out_grad = dilate(out_grad, axes=(1, 2), dilation=self.stride - 1) # 
 
-        # 首先计算输入矩阵X的梯度
-        W_transpose = transpose(flip(W,(0, 1)), (2, 3)) # (K, K, c_out, c_in)
-        # 反向传播处理 stride 和 padding
+        A_grad = conv(_out_grad,
+                      W_tranpose,
+                      stride=1,
+                      padding=K - 1 - self.padding)
         
-        out_grad_dilate = dilate(out_grad, axes=(1, 2), dilation=self.stride - 1)
-        X_grad = conv(
-            out_grad_dilate,
-            W_transpose,
-            stride=1,
-            padding=K - 1 - self.padding)
+        # 计算卷积核 矩阵的梯度 W.grad
+        # The gradients of W must be accumulated over the batches
+        # turning batches into channels via transpose/permute
+        _out_grad = transpose(transpose(_out_grad, (0, 2)), (0, 1)) # (H_out, W_out, N, c_out)
 
-
-
-        out_grad_dilate = transpose(transpose(out_grad_dilate, (0, 2)), (0, 1)) # (H_out, W_out, N, c_out)
-        X_transpose = transpose(X, (0, 3)) # CHWN
-        W_grad = conv(
-            X_transpose,
-            out_grad_dilate,
-            1,
-            self.padding
-        )
+        A_transpose = transpose(A, (0, 3)) # C H W N
+        W_grad = conv(A_transpose, _out_grad,
+                      stride=1,
+                      padding=self.padding)
+        
         W_grad = W_grad.transpose((0, 2)).transpose((0, 1))
-
-        return (X_grad, W_grad)
+        return (A_grad, W_grad)
         ### END YOUR SOLUTION
 
 
