@@ -5,8 +5,7 @@ from needle.autograd import Tensor
 from needle import ops
 import needle.init as init
 import numpy as np
-from .nn_basic import Parameter, Module
-from torch.nn import Conv2d
+from .nn_basic import Parameter, Module, BatchNorm2d, ReLU
 
 class Conv(Module):
     """
@@ -71,3 +70,13 @@ class Conv(Module):
         ) # NHWC -> NCWH -> NCHW
         return x
         ### END YOUR SOLUTION
+
+class ConvBN(Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, bias=True, device=None, dtype="float32"):
+        super().__init__() # training <- true
+        self.conv = Conv(in_channels, out_channels, kernel_size, stride, bias, device=device, dtype=dtype)
+        self.bn = BatchNorm2d(out_channels, device=device, dtype=dtype)
+        self.relu = ReLU()
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.relu(self.bn(self.conv(x)))

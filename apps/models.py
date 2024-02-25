@@ -5,18 +5,54 @@ import needle.nn as nn
 import math
 import numpy as np
 np.random.seed(0)
+# 抄作业 https://github.com/Mmmofan/dlsyscourse-hw/blob/main/hw4/apps/models.py
 
 
 class ResNet9(ndl.nn.Module):
     def __init__(self, device=None, dtype="float32"):
         super().__init__()
         ### BEGIN YOUR SOLUTION ###
-        raise NotImplementedError() ###
+        convBN1 = nn.ConvBN(3, 16, 7, 4, device=device, dtype=dtype)
+        convBN2 = nn.ConvBN(16, 32, 3, 2, device=device, dtype=dtype)
+        # 中间价格 res 网络
+        res1 = nn.Residual(
+            nn.Sequential(
+                nn.ConvBN(32, 32, 3, 1, device=device, dtype=dtype),
+                nn.ConvBN(32, 32, 3, 1, device=device, dtype=dtype)
+            )
+        )
+        convBN3 = nn.ConvBN(32, 64, 3, 2, device=device, dtype=dtype)
+        convBN4 = nn.ConvBN(64, 128, 3, 2, device=device, dtype=dtype)
+        res2 = nn.Residual(
+            nn.Sequential(
+                nn.ConvBN(128, 128, 3, 1, device=device, dtype=dtype),
+                nn.ConvBN(128, 128, 3, 1, device=device, dtype=dtype)
+            )
+        )
+        # flatten
+        flatten = nn.Flatten()
+        # 特征提取
+        self.feature = nn.Sequential(
+            convBN1,
+            convBN2,
+            res1,
+            convBN3,
+            convBN4,
+            res2,
+            flatten
+        )
+        self.fc = nn.Sequential(
+            nn.Linear(128, 128, device=device, dtype=dtype),
+            nn.ReLU(),
+            nn.Linear(128, 10, device=device, dtype=dtype)
+        )
         ### END YOUR SOLUTION
 
     def forward(self, x):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        x = self.feature(x)
+        x = self.fc(x)
+        return x
         ### END YOUR SOLUTION
 
 

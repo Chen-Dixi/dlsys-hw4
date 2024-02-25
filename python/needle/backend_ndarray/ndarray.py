@@ -262,7 +262,6 @@ class NDArray:
             return self.compact().as_strided(new_shape, NDArray.compact_strides(new_shape))
         new_strides = NDArray.compact_strides(new_shape)
         return NDArray.make(new_shape, strides=new_strides, device=self.device, handle=self._handle, offset=self._offset)
-        
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):

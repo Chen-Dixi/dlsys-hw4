@@ -51,7 +51,8 @@ class LogSumExp(TensorOp):
         node_new = reshape(node, tuple(tmp_reshape))
         grad_new = reshape(out_grad, tuple(tmp_reshape))
 
-        return grad_new * exp(z - node_new)
+        # return grad_new * exp(z - node_new)
+        return grad_new.broadcast_to(z.shape) * exp(z - node_new.broadcast_to(z.shape))
         ### END YOUR SOLUTION
 
 
