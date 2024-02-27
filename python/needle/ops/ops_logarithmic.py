@@ -10,12 +10,16 @@ from ..backend_selection import array_api, BACKEND
 class LogSoftmax(TensorOp):
     def compute(self, Z):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        maxZ = Z.max(axis=Z.ndim-1, keepdims=True) # (N, 1)
+        exp_sum = array_api.sum(array_api.exp(Z - maxZ.broadcast_to(Z.shape)), axis=Z.ndim-1, keepdims=True) # (N, 1)
+        logexpsum = array_api.log(exp_sum) + maxZ # (N, 1)
+        return Z - logexpsum.broadcast_to(Z.shape) # (N, C)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        ones = init.ones(node.shape, device=node.device, dtype=node.dtype, requires_grad=False) # (N, C)
+        return out_grad * (ones - exp(node)) # (N, C)
         ### END YOUR SOLUTION
 
 
@@ -57,5 +61,6 @@ class LogSumExp(TensorOp):
 
 
 def logsumexp(a, axes=None):
+    # axes 我们这里只支持指定 1 个维度
     return LogSumExp(axes=axes)(a)
 

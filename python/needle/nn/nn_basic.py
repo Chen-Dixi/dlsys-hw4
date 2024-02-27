@@ -138,11 +138,24 @@ class Sequential(Module):
 
 
 class SoftmaxLoss(Module):
+    """
+    The input is expected to contain the unnormalized logits for each class (which do not need to be positive or sum to 1, in general)
+    The formula of softmaxLosss is: -zy + log(sum(exp(zi)))
+    """
     def forward(self, logits: Tensor, y: Tensor):
+        """
+        Args:
+            logits: shape of (N, C), C is the number of classes
+            y: ground-truth shape,
+        Return:
+            loss: use mean reduciton
+        """
         ### BEGIN YOUR SOLUTION
-        exp_sum = ops.logsumexp(logits, axes=(1, )).sum()
-        z_y_sum = (logits * init.one_hot(logits.shape[1], y, logits.device, logits.dtype)).sum()
-        return (exp_sum - z_y_sum) / logits.shape[0]
+        num_of_classes = logits.shape[1]
+        # one_hot shape: (N, C), np.eye(n, dtype="float32")[y.numpy().astype("int32")] will get one hot for all sample
+        z_y_sum = (logits * init.one_hot(num_of_classes, y, device=logits.device, dtype=logits.dtype)).sum()
+        exp_sum = ops.logsumexp(logits, axes=(1,)).sum()
+        return (exp_sum - z_y_sum) / logits.shape[0] # reduction=mean
         ### END YOUR SOLUTION
 
 
