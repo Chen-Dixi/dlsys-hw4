@@ -18,6 +18,9 @@ class LogSoftmax(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
+        """
+        SEE: 查看这里的解释, 用jacobian行列式推导正确的答案 https://stackoverflow.com/questions/35304393/trying-to-understand-code-that-computes-the-gradient-wrt-to-the-input-for-logsof
+        """
         shape = list(node.shape)
         shape_reduce = list(shape)
         shape_reduce[-1] = 1
