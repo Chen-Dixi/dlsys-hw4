@@ -233,11 +233,18 @@ def test_logsumexp(shape, axes, device):
     A = ndl.Tensor(nd.array(_A), device=device)
     A_t = torch.Tensor(_A)
     if axes is None:
-        t_axes = tuple(list(range(len(shape))))
+        t_axes = tuple(list(range(len(shape)))) # axes for pytorch
     else:
         t_axes = axes
     np.testing.assert_allclose(torch.logsumexp(A_t, dim=t_axes).numpy(), ndl.logsumexp(A, axes=axes).numpy(), atol=1e-5, rtol=1e-5)
 
+@pytest.mark.parametrize("shape", GENERAL_SHAPES)
+@pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"])
+def test_logsoftmax(shape, device):
+    _A = np.random.randn(*shape).astype(np.float32)
+    A = ndl.Tensor(nd.array(_A), device=device)
+    A_t = torch.Tensor(_A)
+    np.testing.assert_allclose(torch.log_softmax(A_t, dim=A_t.dim() - 1).numpy(), ndl.logsoftmax(A).numpy(), atol=1e-5, rtol=1e-5)
 
 
 ### MUGRADE ###

@@ -18,8 +18,8 @@ class LogSoftmax(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        ones = init.ones(node.shape, device=node.device, dtype=node.dtype, requires_grad=False) # (N, C)
-        return out_grad * (ones - exp(node)) # (N, C)
+        # ones = init.ones(*node.shape, device=node.device, dtype=node.dtype, requires_grad=False) # (N, C)
+        return -(exp(node) - 1) * out_grad # (N, C)
         ### END YOUR SOLUTION
 
 
