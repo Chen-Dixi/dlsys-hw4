@@ -4,13 +4,16 @@ from .init_basic import *
 
 def xavier_uniform(fan_in, fan_out, gain=1.0, **kwargs):
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    a = gain * math.sqrt(6 / (fan_in + fan_out))
+    # return rand(fan_in, fan_out, low = -a, high = a, **kwargs)
+    return a * (2 * rand(fan_in, fan_out, **kwargs) - 1)
     ### END YOUR SOLUTION
 
 
 def xavier_normal(fan_in, fan_out, gain=1.0, **kwargs):
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    std = gain * math.sqrt(2 / (fan_in + fan_out))
+    return std * randn(fan_in, fan_out, **kwargs)
     ### END YOUR SOLUTION
 
 
