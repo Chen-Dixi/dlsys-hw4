@@ -14,7 +14,7 @@ class Sigmoid(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return (1+ops.exp(-x))**-1
         ### END YOUR SOLUTION
 
 class RNNCell(Module):
@@ -42,34 +42,38 @@ class RNNCell(Module):
         self.hidden_size = hidden_size
         self.bias = bias
 
+        k = (1 / hidden_size)
+
         self.W_ih = Parameter(
             init.rand(
-                input_size, 
-                hidden_size, 
-                low=-1/hidden_size**0.5,
-                high=1/hidden_size**0.5,
+                input_size,
+                hidden_size,
+                low= -k ** 0.5,
+                high= k ** 0.5,
                 device=device,
                 dtype=dtype,
                 requires_grad=True
             )
         )
+
         self.W_hh = Parameter(
             init.rand(
-                hidden_size, 
-                hidden_size, 
-                low=-1/hidden_size**0.5,
-                high=1/hidden_size**0.5,
+                hidden_size,
+                hidden_size,
+                low= -k ** 0.5,
+                high= k ** 0.5,
                 device=device,
                 dtype=dtype,
                 requires_grad=True
             )
         )
-        if bias:
+
+        if self.bias:
             self.bias_ih = Parameter(
                 init.rand(
-                    hidden_size, 
-                    low=-1/hidden_size**0.5,
-                    high=1/hidden_size**0.5,
+                    hidden_size,
+                    low= -k ** 0.5,
+                    high= k ** 0.5,
                     device=device,
                     dtype=dtype,
                     requires_grad=True
@@ -77,9 +81,9 @@ class RNNCell(Module):
             )
             self.bias_hh = Parameter(
                 init.rand(
-                    hidden_size, 
-                    low=-1/hidden_size**0.5,
-                    high=1/hidden_size**0.5,
+                    hidden_size,
+                    low= -k ** 0.5,
+                    high= k ** 0.5,
                     device=device,
                     dtype=dtype,
                     requires_grad=True
@@ -199,21 +203,55 @@ class LSTMCell(Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.bias = bias
+        
+        k = (1 / hidden_size)
 
-        il, hl = input_size, hidden_size
         self.W_ih = Parameter(
-            init.rand(il, 4*hl, low=-1/hl**0.5, high=1/hl**0.5,device=device,dtype=dtype,requires_grad=True)
+            init.rand(
+                input_size,
+                4*hidden_size,
+                low=k**0.5,
+                high=k**0.5,
+                device=device,
+                dtype=dtype
+            ),
+            requires_grad=True
         )
         self.W_hh = Parameter(
             # NOTE: hl, 4*hl
-            init.rand(hl, 4*hl, low=-1/hl**0.5, high=1/hl**0.5,device=device,dtype=dtype,requires_grad=True)
+            init.rand(
+                hidden_size,
+                4*hidden_size,
+                low=k**0.5,
+                high=k**0.5,
+                device=device,
+                dtype=dtype
+            ),
+            requires_grad=True
         )
+
         if bias:
             self.bias_ih = Parameter(
-                init.rand(4*hl, low=-1/hl**0.5,high=1/hl**0.5,device=device,dtype=dtype,requires_grad=True)
+                init.rand(
+                    1,
+                    4*hidden_size,
+                    low=-k**0.5,
+                    high=k**0.5,
+                    device=device,
+                    dtype=dtype
+                ),
+                requires_grad=True
             )
             self.bias_hh = Parameter(
-                init.rand(4*hl, low=-1/hl**0.5,high=1/hl**0.5,device=device,dtype=dtype,requires_grad=True)
+                init.rand(
+                    1,
+                    4*hidden_size,
+                    low=-k**0.5,
+                    high=k**0.5,
+                    device=device,
+                    dtype=dtype
+                ),
+                requires_grad=True
             )
         self.tanh = Tanh()
         self.sigmoid = Sigmoid()
@@ -237,29 +275,37 @@ class LSTMCell(Module):
             element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        bs = X.shape[0]
-        h0, c0 = (None, None) if h is None else h
-        hl = self.hidden_size
-        out = X @ self.W_ih
-        if h0 is not None:
-            out += h0 @ self.W_hh
+        batch_sz = X.shape[0]
+        hiden_size = self.hidden_size
+        h0, c0 = h if h is not None else (
+            init.zeros(
+                batch_sz,
+                self.hidden_size,
+                device=X.device,
+                dtype=X.dtype,
+                requires_grad=False
+            ),
+            init.zeros(
+                batch_sz,
+                self.hidden_size,
+                device=X.device,
+                dtype=X.dtype,
+                requires_grad=False
+            )
+        )
+        out = X@self.W_ih + h0@self.W_hh # (bs, 4*hidden_size)
         if self.bias:
-            out += self.bias_ih.reshape((1, 4*hl)).broadcast_to((bs, 4*hl))
-            out += self.bias_hh.reshape((1, 4*hl)).broadcast_to((bs, 4*hl))
+            out += (self.bias_hh.broadcast_to((batch_sz, 4*self.hidden_size)) + self.bias_ih.broadcast_to((batch_sz, 4*self.hidden_size)))
         out_list = ops.split(out, 1)
-        # NOTE out_list is a TensorTuple, cannot slice
-        i = ops.stack(tuple([out_list[i] for i in range(0, hl)]), 1)
-        f = ops.stack(tuple([out_list[i] for i in range(hl, 2*hl)]), 1)
-        g = ops.stack(tuple([out_list[i] for i in range(2*hl, 3*hl)]), 1)
-        o = ops.stack(tuple([out_list[i] for i in range(3*hl, 4*hl)]), 1)
-
-
-        g = self.tanh(g)
-        i, f, o = self.sigmoid(i), self.sigmoid(f), self.sigmoid(o)
+        i = ops.stack([out_list[i] for i in range(0, hiden_size)], 1)
+        f = ops.stack([out_list[i] for i in range(hiden_size, 2*hiden_size)], 1)
+        g = ops.stack([out_list[i] for i in range(2*hiden_size, 3*hiden_size)], 1)
+        o = ops.stack([out_list[i] for i in range(3*hiden_size, 4*hiden_size)], 1)
         
-        c1 = i * g if c0 is None else f * c0 + i * g
+        i, f, g, o = self.sigmoid(i), self.sigmoid(f), self.tanh(g), self.sigmoid(o)
+        c1 = f * c0 + i * g
         h1 = o * self.tanh(c1)
-        return (h1, c1)
+        return h1, c1
         ### END YOUR SOLUTION
 
 
@@ -317,17 +363,19 @@ class LSTM(Module):
         h0, c0 = (None, None) if h is None else h
         hs = [None] * self.num_layers if h0 is None else ops.split(h0, 0)
         cs = [None] * self.num_layers if c0 is None else ops.split(c0, 0)
+        h_s = [None] * self.num_layers if h is None else [(hs[i], cs[i]) for i in range(self.num_layers)]
         out = []
         for t, x in enumerate(Xs):
             hiddens = []
             cells = []
-            for l, model in enumerate(self.lstm_cells):
-                x, c_out = model(x, (hs[l], cs[l]))
+            for l, cell in enumerate(self.lstm_cells):
+                x, c_out = cell(x, h_s[l])
                 hiddens.append(x)
                 cells.append(c_out)
             out.append(x)
             hs = hiddens
             cs = cells
+            h_s = [(hs[i], cs[i]) for i in range(self.num_layers)]
         out = ops.stack(out, 0)
         hs = ops.stack(hs, 0)
         cs = ops.stack(cs, 0)

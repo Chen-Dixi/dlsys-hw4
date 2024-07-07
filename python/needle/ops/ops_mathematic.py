@@ -386,6 +386,21 @@ class Tanh(TensorOp):
 def tanh(a):
     return Tanh()(a)
 
+class Sigmoid(TensorOp):
+    def compute(self, a):
+        ### BEGIN YOUR SOLUTION
+        return (1 + (-a).exp()) ** (-1)
+        ### END YOUR SOLUTION
+        
+    def gradient(self, out_grad, node):
+        ### BEGIN YOUR SOLUTION
+        node_sigmoid = sigmoid(node.inputs[0])
+        return node_sigmoid * (1 - node_sigmoid) * out_grad
+        ### END YOUR SOLUTION
+
+def sigmoid(a):
+    return Sigmoid()(a)
+
 
 class Stack(TensorOp):
     def __init__(self, axis: int):
