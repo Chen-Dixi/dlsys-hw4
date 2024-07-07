@@ -58,9 +58,9 @@ class BackendDevice:
 def cuda():
     """Return cuda device"""
     try:
-        from . import ndarray_backend_cuda
+        # from . import ndarray_backend_cuda
 
-        return BackendDevice("cuda", ndarray_backend_cuda)
+        return BackendDevice("cuda", None)
     except ImportError:
         return BackendDevice("cuda", None)
 
