@@ -43,7 +43,7 @@ def test_lstm_cell():
     print(h, c)
 
 def test_lstm():
-    seq_length, num_layers = SEQ_LENGTHS[1], NUM_LAYERS[0]
+    seq_length, num_layers = SEQ_LENGTHS[1], NUM_LAYERS[1]
     batch_size = BATCH_SIZES[0]
     input_size = INPUT_SIZES[1]
     hidden_size = HIDDEN_SIZES[0]
