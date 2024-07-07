@@ -382,16 +382,26 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    for node in reverse_topo_order:
-        node_gradient = sum_node_list(node_to_output_grads_list[node])
-        node.grad = node_gradient
-        if not node.is_leaf():
-            partial_adjoints = node.op.gradient_as_tuple(node_gradient, node)
-            for i, input_of_node in enumerate(node.inputs):
-                if input_of_node not in node_to_output_grads_list:
-                    node_to_output_grads_list[input_of_node] = []
+    # for node in reverse_topo_order:
+    #     node_gradient = sum_node_list(node_to_output_grads_list[node])
+    #     node.grad = node_gradient
+    #     if not node.is_leaf():
+    #         partial_adjoints = node.op.gradient_as_tuple(node_gradient, node)
+    #         for i, input_of_node in enumerate(node.inputs):
+    #             if input_of_node not in node_to_output_grads_list:
+    #                 node_to_output_grads_list[input_of_node] = []
                 
-                node_to_output_grads_list[input_of_node].append(partial_adjoints[i])
+    #             node_to_output_grads_list[input_of_node].append(partial_adjoints[i])
+    for node in reverse_topo_order: 
+        node.grad = sum_node_list(node_to_output_grads_list[node])
+        
+        if node.is_leaf():
+            continue
+        for i, grad in enumerate(node.op.gradient_as_tuple(node.grad, node)):
+            input_ =  node.inputs[i]
+            if input_ not in node_to_output_grads_list:
+                node_to_output_grads_list[input_] = []
+            node_to_output_grads_list[input_].append(grad)
     ### END YOUR SOLUTION
 
 
@@ -406,9 +416,12 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     ### BEGIN YOUR SOLUTION
     topo_order: List[Value] = []
     visited = set()
-    for node in node_list:
-        topo_sort_dfs(node, visited, topo_order)
+    # for node in node_list:
+    #     topo_sort_dfs(node, visited, topo_order)
 
+    # return topo_order
+    for node in node_list:
+        if node not in visited: topo_sort_dfs(node, visited, topo_order)
     return topo_order
     ### END YOUR SOLUTION
 
@@ -416,13 +429,20 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    for input_node in node.inputs:
-        if input_node not in visited:
-            topo_sort_dfs(input_node, visited, topo_order)
+    # for input_node in node.inputs:
+    #     if input_node not in visited:
+    #         topo_sort_dfs(input_node, visited, topo_order)
 
-    if node not in visited:
-        visited.add(node)
-        topo_order.append(node)
+    # if node not in visited:
+    #     visited.add(node)
+    #     topo_order.append(node)
+    if node in visited: return
+
+    for next in node.inputs:
+        topo_sort_dfs(next, visited, topo_order)
+    
+    visited.add(node)
+    topo_order.append(node)    
     ### END YOUR SOLUTION
 
 

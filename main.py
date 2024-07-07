@@ -11,7 +11,7 @@ NUM_LAYERS = [1, 2]
 
 BATCH_SIZES = [1, 15]
 INPUT_SIZES = [1, 11]
-HIDDEN_SIZES = [1, 12]
+HIDDEN_SIZES = [1, 2]
 BIAS = [True, False]
 INIT_HIDDEN = [True, False]
 NONLINEARITIES = ['tanh', 'relu']
@@ -20,7 +20,7 @@ np.random.seed(3)
 
 def test_lstm_cell():
     batch_size = BATCH_SIZES[0]
-    input_size = INPUT_SIZES[1]
+    input_size = INPUT_SIZES[0]
     hidden_size = HIDDEN_SIZES[1]
     bias = True
     init_hidden = False
@@ -30,7 +30,7 @@ def test_lstm_cell():
 
     torch_lstm_cell = torch.nn.LSTMCell(input_size, hidden_size, bias=bias)
     h_, c_ = torch_lstm_cell(torch.tensor(x), None)
-    print(h_, c_)
+    print(h_)
     print("========")
     device = ndl.cpu_numpy()
     model = ndl.nn.LSTMCell(input_size, hidden_size, bias=bias, device=device)
@@ -40,7 +40,14 @@ def test_lstm_cell():
         model.bias_ih = ndl.Tensor(torch_lstm_cell.bias_ih.detach().numpy(), device=device)
         model.bias_hh = ndl.Tensor(torch_lstm_cell.bias_hh.detach().numpy(), device=device)
     h, c = model(ndl.Tensor(x, device=device), None)
-    print(h, c)
+    print(h)
+    print("========")
+    print("========")
+    h.sum().backward()
+    h_.sum().backward()
+    print(torch_lstm_cell.weight_ih.grad.detach().numpy().transpose())
+    print("========")
+    print(model.W_ih.grad.numpy())
 
 def test_lstm():
     seq_length, num_layers = SEQ_LENGTHS[1], NUM_LAYERS[1]
@@ -69,11 +76,11 @@ def test_lstm():
     # torch 模型输出
     output_, (h_, c_) = torch_model(torch.tensor(x), None)
     output, (h, c) = needle_model(ndl.Tensor(x, device=device), None)
-    print(output_)
-    print(output)
+    print(h_)
+    print(h)
 
 if __name__ == '__main__':
     # test_tanh_backward()
     # cifar10_dataset()
     # cifar10_dataloader()
-    test_lstm()
+    test_lstm_cell()

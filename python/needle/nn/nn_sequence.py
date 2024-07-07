@@ -14,7 +14,7 @@ class Sigmoid(Module):
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        return (1+ops.exp(-x))**-1
+        return (1+ops.exp(-x))**(-1)
         ### END YOUR SOLUTION
 
 class RNNCell(Module):

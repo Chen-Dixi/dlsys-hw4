@@ -95,7 +95,7 @@ def test_lstm_cell(batch_size, input_size, hidden_size, bias, init_hidden, devic
 
     h.sum().backward()
     h_.sum().backward()
-    # np.testing.assert_allclose(model_.weight_ih.grad.detach().numpy().transpose(), model.W_ih.grad.numpy(), atol=1e-5, rtol=1e-5)
+    np.testing.assert_allclose(model_.weight_ih.grad.detach().numpy().transpose(), model.W_ih.grad.numpy(), atol=1e-5, rtol=1e-5)
 
 
 SEQ_LENGTHS = [1, 13]
@@ -176,7 +176,7 @@ def test_lstm(seq_length, num_layers, batch_size, input_size, hidden_size, bias,
 
     output.sum().backward()
     output_.sum().backward()
-    # np.testing.assert_allclose(model.lstm_cells[0].W_ih.grad.detach().numpy(), model_.weight_ih_l0.grad.numpy().transpose(), atol=1e-5, rtol=1e-5)
+    np.testing.assert_allclose(model.lstm_cells[0].W_ih.grad.detach().numpy(), model_.weight_ih_l0.grad.numpy().transpose(), atol=1e-5, rtol=1e-5)
 
 
 OUTPUT_SIZES = [1, 1000]

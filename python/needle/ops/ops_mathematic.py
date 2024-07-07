@@ -107,7 +107,7 @@ class PowerScalar(TensorOp):
         if self.scalar == 0:
             return out_grad * 0
         
-        return out_grad * self.scalar * (a ** self.scalar - 1)
+        return out_grad * self.scalar * (a ** (self.scalar - 1))
         ### END YOUR SOLUTION
 
 
@@ -400,7 +400,6 @@ class Sigmoid(TensorOp):
 
 def sigmoid(a):
     return Sigmoid()(a)
-
 
 class Stack(TensorOp):
     def __init__(self, axis: int):
