@@ -16,6 +16,7 @@ class Dictionary(object):
     def __init__(self):
         self.word2idx = {}
         self.idx2word = []
+        self.sz = 0
 
     def add_word(self, word):
         """
@@ -25,7 +26,12 @@ class Dictionary(object):
         Returns the word's unique ID.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if word not in self.word2idx:
+            cur_idx = len(self.idx2word)
+            self.word2idx[word] = cur_idx
+            self.idx2word.append(word)
+            self.sz += 1
+        return self.word2idx[word]
         ### END YOUR SOLUTION
 
     def __len__(self):
@@ -33,7 +39,7 @@ class Dictionary(object):
         Returns the number of unique words in the dictionary.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return len(self.idx2word)
         ### END YOUR SOLUTION
 
 
@@ -46,7 +52,7 @@ class Corpus(object):
         self.dictionary = Dictionary()
         self.train = self.tokenize(os.path.join(base_dir, 'train.txt'), max_lines)
         self.test = self.tokenize(os.path.join(base_dir, 'test.txt'), max_lines)
-
+        
     def tokenize(self, path, max_lines=None):
         """
         Input:
@@ -60,7 +66,30 @@ class Corpus(object):
         ids: List of ids
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        # <eos>
+        ids = []
+        eos_id = self.dictionary.add_word('<eos>')
+        # read the data and append <eos> to the end of each line
+
+        def tokenize_line(line):
+            words = line.split()
+            for word in words:
+                ids.append(self.dictionary.add_word(word))
+            ids.append(eos_id)  # '<eos>' should be appended to the end of each line
+        
+        with open(path, 'r') as f:
+            # lines = f.readlines() # 读完所有行，性能太差
+
+            if max_lines is not None:
+                for _ in range(max_lines):
+                    tokenize_line(f.readline())
+                
+            else:
+                for line in f.readlines():
+                    tokenize_line(line)
+                
+                # 空格分隔
+        return ids
         ### END YOUR SOLUTION
 
 
@@ -79,9 +108,13 @@ def batchify(data, batch_size, device, dtype):
     batch processing.
     If the data cannot be evenly divided by the batch size, trim off the remainder.
     Returns the data as a numpy array of shape (nbatch, batch_size).
+    Inputs:
+        data - sequence data of shape
+        batch_size - int specifying the batch size
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    n = len(data) // batch_size
+    return np.array(data[:n*batch_size]).reshape((batch_size, n)).swapaxes(-1,-2)
     ### END YOUR SOLUTION
 
 
@@ -105,5 +138,14 @@ def get_batch(batches, i, bptt, device=None, dtype=None):
     target - Tensor of shape (bptt*bs,) with cached data as NDArray
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    # max_index = min(len(batches), (i + 1) * bptt)
+    # data = batches[i * bptt:max_index]
+    # target = batches[i * bptt + 1:max_index + 1]
+    # return data, target.flatten()
+    bptt = min(bptt, len(batches)-1-i)
+    data = batches[i:i+bptt]
+    target = batches[i+1:i+1+bptt]
+    data = Tensor(data, device=device, dtype=dtype)
+    target = Tensor(target.reshape(-1), device=device, dtype=dtype)
+    return data, target
     ### END YOUR SOLUTION
