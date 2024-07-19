@@ -5,7 +5,7 @@ from needle.autograd import Tensor
 from needle import ops
 import needle.init as init
 import numpy as np
-from .nn_basic import Parameter, Module, ReLU, Tanh
+from .nn_basic import Parameter, Module, ReLU, Tanh, Linear
 
 
 class Sigmoid(Module):
@@ -51,9 +51,9 @@ class RNNCell(Module):
                 low= -k ** 0.5,
                 high= k ** 0.5,
                 device=device,
-                dtype=dtype,
-                requires_grad=True
-            )
+                dtype=dtype
+            ),
+            requires_grad=True
         )
 
         self.W_hh = Parameter(
@@ -63,9 +63,9 @@ class RNNCell(Module):
                 low= -k ** 0.5,
                 high= k ** 0.5,
                 device=device,
-                dtype=dtype,
-                requires_grad=True
-            )
+                dtype=dtype
+            ),
+            requires_grad=True
         )
 
         if self.bias:
@@ -75,9 +75,9 @@ class RNNCell(Module):
                     low= -k ** 0.5,
                     high= k ** 0.5,
                     device=device,
-                    dtype=dtype,
-                    requires_grad=True
-                )
+                    dtype=dtype
+                ),
+                requires_grad=True
             )
             self.bias_hh = Parameter(
                 init.rand(
@@ -85,9 +85,9 @@ class RNNCell(Module):
                     low= -k ** 0.5,
                     high= k ** 0.5,
                     device=device,
-                    dtype=dtype,
-                    requires_grad=True
-                )
+                    dtype=dtype
+                ),
+                requires_grad=True
             )
         self.nonlinearity = Tanh() if nonlinearity == 'tanh' else ReLU()
         ### END YOUR SOLUTION
@@ -105,13 +105,19 @@ class RNNCell(Module):
         """
         ### BEGIN YOUR SOLUTION
         bs = X.shape[0]
-        out = X @ self.W_ih
+        h = h if h is not None else init.zeros(
+            bs,
+            self.hidden_size,
+            device=X.device,
+            dtype=X.dtype,
+            requires_grad=False
+        )
+
+        out = X @ self.W_ih + h @ self.W_hh
         if self.bias:
             out += self.bias_ih.reshape((1, self.hidden_size)).broadcast_to((bs, self.hidden_size))
-        if h is not None:
-            out += h @ self.W_hh
-        if self.bias:
             out += self.bias_hh.reshape((1, self.hidden_size)).broadcast_to((bs, self.hidden_size))
+                
         return self.nonlinearity(out)
         ### END YOUR SOLUTION
 
@@ -396,8 +402,20 @@ class Embedding(Module):
         weight - The learnable weights of shape (num_embeddings, embedding_dim)
             initialized from N(0, 1).
         """
+        self.num_embeddings = num_embeddings
+        self.embedding_dim = embedding_dim
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(
+            init.randn(
+                num_embeddings,
+                embedding_dim,
+                device=device,
+                dtype=dtype
+            ),
+            requires_grad=True
+        )
+        self.device = device
+        self.dtype = dtype
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
@@ -411,5 +429,12 @@ class Embedding(Module):
         output of shape (seq_len, bs, embedding_dim)
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        seq_len, bs = x.shape[0], x.shape[1]
+        # 1. one-hot
+        x = init.one_hot(self.num_embeddings, x, dtype=self.dtype, device=self.device, requires_grad=True)
+        # 2. linear
+        return ops.matmul(
+            x.reshape((-1, self.num_embeddings)),
+            self.weight
+            ).reshape((seq_len, bs, self.embedding_dim))
         ### END YOUR SOLUTION
