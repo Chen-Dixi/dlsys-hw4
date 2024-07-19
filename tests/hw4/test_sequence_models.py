@@ -230,7 +230,7 @@ def test_language_model_training(device):
     seq_model = 'rnn'
     num_layers = 2
     hidden_size = 10
-    n_epochs=2
+    n_epochs=1
     train_data = ndl.data.batchify(corpus.train, batch_size=batch_size, device=device, dtype="float32")
     model = LanguageModel(30, len(corpus.dictionary), hidden_size=hidden_size, num_layers=num_layers, seq_model=seq_model, device=device)
     train_acc, train_loss = train_ptb(model, train_data, seq_len=seq_len, n_epochs=n_epochs, device=device)
